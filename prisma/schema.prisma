@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "client"
+}
+datasource db {
+  provider = "postgresql"
+}
+model Project {
+  id String @id @default(cuid())
+  title String
+  artist String
+  category String
+  topic String
+  targetDuration Int @default(35)
+  status String @default("TOPIC_SELECTED")
+  demo Boolean @default(false)
+  idApproved String?
+  enApproved String?
+  finalRevisionId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  scripts ScriptVersion[]
+  timelines EditingTimeline[]
+  revisions VideoRevision[]
+  sources ResearchSource[]
+  events AuditEvent[]
+  approvals ApprovalEvent[]
+  jobs BackgroundJob[]
+}
+model ScriptVersion {
+  id String @id @default(cuid())
+  projectId String
+  project Project @relation(fields:[projectId], references:[id])
+  language String
+  text String
+  instruction String?
+  parentId String?
+  basedOn String?
+  demo Boolean @default(false)
+  createdAt DateTime @default(now())
+  @@index([projectId, language])
+}
+model EditingTimeline {
+  id String @id @default(cuid())
+  projectId String
+  project Project @relation(fields:[projectId], references:[id])
+  scriptId String
+  scenes Json
+  demo Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+model VideoRevision {
+  id String @id @default(cuid())
+  projectId String
+  project Project @relation(fields:[projectId], references:[id])
+  number Int
+  filename String
+  storageKey String @unique
+  metadata Json
+  frames Json
+  review Json?
+  comparison Json?
+  comparedToId String?
+  contextVersion String
+  reviewDemo Boolean @default(false)
+  createdAt DateTime @default(now())
+  reports ReviewReport[]
+  @@unique([projectId, number])
+}
+model BackgroundJob {
+  id String @id @default(cuid())
+  projectId String
+  project Project @relation(fields:[projectId], references:[id])
+  revisionId String
+  kind String
+  status String @default("QUEUED")
+  progress Int @default(0)
+  error String?
+  attempts Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status, createdAt])
+}
+model ResearchSource {
+  id String @id @default(cuid())
+  projectId String
+  project Project @relation(fields:[projectId], references:[id])
+  name String
+  url String
+  notes String
+  kind String @default("UNVERIFIED")
+  publishedAt String?
+  accessedAt DateTime @default(now())
+}
+model ApprovalEvent {
+  id String @id @default(cuid())
+  projectId String
+  project Project @relation(fields:[projectId], references:[id])
+  kind String
+  artifactId String
+  createdAt DateTime @default(now())
+}
+model AuditEvent {
+  id String @id @default(cuid())
+  projectId String
+  project Project @relation(fields:[projectId], references:[id])
+  action String
+  detail String
+  createdAt DateTime @default(now())
+}
+model TopicCandidate {
+  id String @id @default(cuid())
+  data Json
+  demo Boolean @default(false)
+  disposition String @default("NEW")
+  createdAt DateTime @default(now())
+}
+
+model ReviewReport {
+  id String @id @default(cuid())
+  revisionId String
+  revision VideoRevision @relation(fields:[revisionId], references:[id])
+  kind String
+  data Json
+  demo Boolean @default(false)
+  contextVersion String
+  createdAt DateTime @default(now())
+}
